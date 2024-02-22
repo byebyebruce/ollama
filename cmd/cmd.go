@@ -937,6 +937,7 @@ func NewCLI() *cobra.Command {
 		listCmd,
 		copyCmd,
 		deleteCmd,
+		ChatCmd(),
 	)
 
 	return rootCmd

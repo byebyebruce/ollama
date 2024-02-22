@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -9,6 +10,17 @@ import (
 	"github.com/jmorganca/ollama/api"
 	"github.com/jmorganca/ollama/server"
 )
+
+func HasModel(model string) (bool, error) {
+	_, err := server.GetModel(model)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
+}
 
 func ListModel() ([]*server.Model, error) {
 	manifestsPath, err := server.GetManifestPath()

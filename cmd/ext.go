@@ -4,16 +4,81 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/jmorganca/ollama/api"
 	"github.com/jmorganca/ollama/core"
+	"github.com/jmorganca/ollama/format"
+	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )
 
-func ChatCmd() *cobra.Command {
+func StandaloneCmd() *cobra.Command {
 	c := &cobra.Command{
-		Use: "chat",
+		Short: "Standalone mode",
+		Use:   "sd",
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			return initializeKeypair()
+		},
+	}
+	c.AddCommand(
+		chatCmd(),
+		pullCmd(),
+		listCmd(),
+	)
+	return c
+}
+
+func listCmd() *cobra.Command {
+	c := &cobra.Command{
+		Short: "List models",
+		Use:   "list",
+	}
+	c.RunE = func(cmd *cobra.Command, args []string) error {
+		ms, err := core.ListModel()
+		if err != nil {
+			return err
+		}
+		table := tablewriter.NewWriter(cmd.OutOrStdout())
+		table.SetRowLine(true)
+		table.SetHeader([]string{"#", "Name", "Size", "Template"})
+		table.SetAutoWrapText(false)
+		table.SetRowSeparator("-")
+		i := 0
+		for _, c := range ms {
+			i++
+			table.Append([]string{strconv.Itoa(i), c.Name, format.HumanBytes(c.Size), c.Template})
+		}
+		table.Render()
+		return nil
+	}
+	return c
+}
+
+func pullCmd() *cobra.Command {
+	c := &cobra.Command{
+		Short: "Pull model",
+		Use:   "pull",
+	}
+	c.RunE = func(cmd *cobra.Command, args []string) error {
+		if len(args) == 0 {
+			return fmt.Errorf("model is required")
+		}
+		model := args[0]
+		err := core.PullModel(cmd.Context(), model, func(r api.ProgressResponse) {})
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+	return c
+}
+
+func chatCmd() *cobra.Command {
+	c := &cobra.Command{
+		Short: "Chat with model",
+		Use:   "chat",
 	}
 	c.RunE = func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {

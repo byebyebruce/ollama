@@ -13,6 +13,7 @@ import (
 
 func TestCore_Predict(t *testing.T) {
 	c, err := New("qwen:0.5b")
+	c, err = New("qwen:0.5b")
 	defer c.Close()
 	require.Nil(t, err)
 
@@ -48,11 +49,18 @@ func TestCore_List(t *testing.T) {
 
 func TestCore_Pull(t *testing.T) {
 	model := "qwen:0.5b"
-	model = "nomic-embed-text"
-	err := PullModel(context.Background(), model, func(r api.ProgressResponse) {
+	err := DeleteModel(context.Background(), model)
+	require.Nil(t, err)
+	//model = "nomic-embed-text"
+	err = PullModel(context.Background(), model, func(r api.ProgressResponse) {
 		fmt.Println(r.Completed, r.Total)
 	})
 	require.Nil(t, err)
+
+	a, err := ListModel()
+	require.Nil(t, err)
+	require.NotNil(t, a)
+	fmt.Println(a)
 }
 
 func TestCore_Embed(t *testing.T) {

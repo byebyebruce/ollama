@@ -64,3 +64,10 @@ func PullModel(ctx context.Context, model string, fn func(r api.ProgressResponse
 	}
 	return nil
 }
+func DeleteModel(ctx context.Context, model string) error {
+	err := server.DeleteModel(model)
+	if err != nil {
+		return err
+	}
+	return server.PruneLayers()
+}

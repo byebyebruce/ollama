@@ -3,10 +3,10 @@ package core
 import (
 	"context"
 	"fmt"
-	"log/slog"
-	"os"
 	"runtime"
 	"sync"
+
+	"log/slog"
 
 	"github.com/jmorganca/ollama/api"
 	"github.com/jmorganca/ollama/gpu"
@@ -15,17 +15,12 @@ import (
 )
 
 type Core struct {
-	workDir string
-	mu      sync.Mutex
-	model   *llmWrapper
+	mu    sync.Mutex
+	model *llmWrapper
 }
 
 func New(model string) (*Core, error) {
-	workDir, err := os.MkdirTemp("", "ollama")
-	if err != nil {
-		return nil, err
-	}
-	if err := llm.Init(workDir); err != nil {
+	if err := llm.Init(); err != nil {
 		return nil, fmt.Errorf("unable to initialize llm library %w", err)
 	}
 	if runtime.GOOS == "linux" { // TODO - windows too
@@ -36,10 +31,10 @@ func New(model string) (*Core, error) {
 	}
 
 	c := &Core{
-		workDir: workDir,
+		//workDir: workDir,
 	}
 
-	cm, err := load(workDir, model)
+	cm, err := load(model)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +49,7 @@ func (c *Core) Close() {
 	if c.model != nil {
 		c.model.Close()
 	}
-	os.RemoveAll(c.workDir)
+	//os.RemoveAll(c.workDir)
 }
 
 func (c *Core) Reload(ctx context.Context, model string) error {
@@ -73,7 +68,7 @@ func (c *Core) Reload(ctx context.Context, model string) error {
 		c.model.Close()
 	}
 	c.model = nil
-	lw, err := load(c.workDir, model)
+	lw, err := load(model)
 	if err != nil {
 		return err
 	}

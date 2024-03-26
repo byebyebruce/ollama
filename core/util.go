@@ -28,14 +28,14 @@ type llmWrapper struct {
 	*server.Model
 }
 
-func load(workDir string, modelName string) (*llmWrapper, error) {
+func load(modelName string) (*llmWrapper, error) {
 	model, err := server.GetModel(modelName)
 	if err != nil {
 		return nil, err
 	}
 	var opts, _ = modelOptions(model, nil)
 
-	llmRunner, err := llm.New(workDir, model.ModelPath, model.AdapterPaths, model.ProjectorPaths, opts)
+	llmRunner, err := llm.New(model.ModelPath, model.AdapterPaths, model.ProjectorPaths, opts)
 	if err != nil {
 		// some older models are not compatible with newer versions of llama.cpp
 		// show a generalized compatibility error until there is a better way to
